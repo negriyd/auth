@@ -1,8 +1,13 @@
 server:
   port: 3555
 
-jdbc:
-  driverClassName: com.mysql.jdbc.Driver
-  url: jdbc:mysql://localhost:3306/auth_server
-  user: root
-  pass: dbpass
+#jdbc:
+#  driverClassName: com.mysql.jdbc.Driver
+#  url: jdbc:mysql://localhost:3306/auth_server
+#  user: root
+#  pass: dbpass
+
+#spring:
+#  datasource:
+#    url:
+#    driver-class-name:

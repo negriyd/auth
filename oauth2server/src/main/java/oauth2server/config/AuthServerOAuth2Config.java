@@ -71,6 +71,9 @@ public class AuthServerOAuth2Config extends AuthorizationServerConfigurerAdapter
     @Value("classpath:schema.sql")
     private Resource schemaScript;
 
+    @Value("classpath:data.sql")
+    private Resource dataScript;
+
     @Bean
     public DataSourceInitializer dataSourceInitializer(DataSource dataSource) {
         DataSourceInitializer initializer = new DataSourceInitializer();
@@ -82,6 +85,7 @@ public class AuthServerOAuth2Config extends AuthorizationServerConfigurerAdapter
     private DatabasePopulator databasePopulator() {
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
         populator.addScript(schemaScript);
+        populator.addScript(dataScript);
         return populator;
     }
 

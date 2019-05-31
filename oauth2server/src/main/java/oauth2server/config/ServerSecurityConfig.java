@@ -33,6 +33,7 @@ public class ServerSecurityConfig extends WebSecurityConfigurerAdapter {
                 .usernameParameter("form-username")
                 .passwordParameter("form-password")
                 .loginProcessingUrl("/login.do").permitAll()
+                .loginProcessingUrl("/oauth/authorize").permitAll()
                 .and()
                 .authorizeRequests().antMatchers("/me").authenticated()
                 .and()

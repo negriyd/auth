@@ -4,7 +4,7 @@ services:
   adminer:
     image: adminer
     ports:
-      - 8080:8080
+      - 3307:8080
 
   dbMysql:
     image: mysql:8.0.3
@@ -13,4 +13,4 @@ services:
       - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: dbpass
-      MYSQL_DATABASE: mydb
+      MYSQL_DATABASE: auth_server

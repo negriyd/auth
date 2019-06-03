@@ -1,6 +1,7 @@
 package oauth2server.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +18,7 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore;
 import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore;
 
 import javax.sql.DataSource;
@@ -24,48 +26,26 @@ import javax.sql.DataSource;
 @Configuration
 @EnableAuthorizationServer
 public class AuthServerOAuth2Config extends AuthorizationServerConfigurerAdapter {
+    private static final String CLIENT_ID = "my-client";
+    // encoding method prefix is required for DelegatingPasswordEncoder which is default since Spring Security 5.0.0.RC1
+    // you can use one of bcrypt/noop/pbkdf2/scrypt/sha256
+    // you can change default behaviour by providing a bean with the encoder you want
+    // more: https://spring.io/blog/2017/11/01/spring-security-5-0-0-rc1-released#password-encoding
+    static final String CLIENT_SECRET = "$2a$11$Ylugl5PH9dw30p25OEfRaOB6Emkd2GO8rq2hyQvkU83X6uWhlPy9O";//"{noop}my-secret";
+
+    private static final String GRANT_TYPE_PASSWORD = "password";
+    private static final String AUTHORIZATION_CODE = "authorization_code";
+    private static final String REFRESH_TOKEN = "refresh_token";
+    private static final String SCOPE_READ = "read";
+    private static final String SCOPE_WRITE = "write";
+    private static final String TRUST = "trust";
+    private static final int VALID_FOREVER = -1;
+
     @Autowired
-    //@Qualifier("authenticationManagerBean")
-    private AuthenticationManager authenticationManager;
+    private AuthenticationManager authManager;
 
-    @Override
-    public void configure(
-            AuthorizationServerSecurityConfigurer oauthServer)
-            throws Exception {
-        oauthServer
-                .tokenKeyAccess("permitAll()")
-                .checkTokenAccess("isAuthenticated()");
-    }
-
-    @Override
-    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
-        clients.jdbc(dataSource())
-                .withClient("sampleClientId")
-                .authorizedGrantTypes("implicit")
-                .scopes("read")
-                .autoApprove(true)
-                .and()
-                .withClient("clientIdPassword")
-                .secret("secret")
-                .authorizedGrantTypes(
-                        "password","authorization_code", "refresh_token")
-                .scopes("read");
-    }
-
-    @Override
-    public void configure(
-            AuthorizationServerEndpointsConfigurer endpoints)
-            throws Exception {
-
-        endpoints
-                .tokenStore(tokenStore())
-                .authenticationManager(authenticationManager);
-    }
-
-    @Bean
-    public TokenStore tokenStore() {
-        return new JdbcTokenStore(dataSource());
-    }
+    @Autowired
+    Environment env;
 
     /*Data Source Configuration*/
     @Value("classpath:schema.sql")
@@ -74,12 +54,12 @@ public class AuthServerOAuth2Config extends AuthorizationServerConfigurerAdapter
     @Value("classpath:data.sql")
     private Resource dataScript;
 
+    @Autowired
+    private DataSource dataSource;
+
     @Bean
-    public DataSourceInitializer dataSourceInitializer(DataSource dataSource) {
-        DataSourceInitializer initializer = new DataSourceInitializer();
-        initializer.setDataSource(dataSource);
-        initializer.setDatabasePopulator(databasePopulator());
-        return initializer;
+    public TokenStore tokenStore() {
+        return new JdbcTokenStore(dataSource);
     }
 
     private DatabasePopulator databasePopulator() {
@@ -89,16 +69,32 @@ public class AuthServerOAuth2Config extends AuthorizationServerConfigurerAdapter
         return populator;
     }
 
-    @Autowired
-    Environment env;
-
     @Bean
-    public DataSource dataSource() {
-        DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName(env.getProperty("jdbc.driverClassName"));
-        dataSource.setUrl(env.getProperty("jdbc.url"));
-        dataSource.setUsername(env.getProperty("jdbc.user"));
-        dataSource.setPassword(env.getProperty("jdbc.pass"));
-        return dataSource;
+    public DataSourceInitializer dataSourceInitializer(DataSource dataSource) {
+        DataSourceInitializer initializer = new DataSourceInitializer();
+        initializer.setDataSource(dataSource);
+        initializer.setDatabasePopulator(databasePopulator());
+        return initializer;
+    }
+
+    @Override
+    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+        /*clients.jdbc(dataSource)
+                .withClient(CLIENT_ID)
+                .secret(CLIENT_SECRET)
+                .authorizedGrantTypes(GRANT_TYPE_PASSWORD, AUTHORIZATION_CODE, REFRESH_TOKEN)
+                .scopes(SCOPE_READ, SCOPE_WRITE, TRUST)
+                .accessTokenValiditySeconds(VALID_FOREVER)
+                .refreshTokenValiditySeconds(VALID_FOREVER);*/
+
+        clients.jdbc(dataSource);
+
+    }
+
+    @Override
+    public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
+        endpoints
+                .tokenStore(tokenStore())
+                .authenticationManager(authManager);
     }
 }

@@ -18,8 +18,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Component
-public class InitialDataLoader implements
-        ApplicationListener<ContextRefreshedEvent> {
+public class InitialDataLoader implements ApplicationListener<ContextRefreshedEvent> {
 
     boolean alreadySetup = false;
 

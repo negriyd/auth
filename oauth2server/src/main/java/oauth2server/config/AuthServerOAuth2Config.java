@@ -1,6 +1,7 @@
 package oauth2server.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,7 +31,7 @@ public class AuthServerOAuth2Config extends AuthorizationServerConfigurerAdapter
     // you can use one of bcrypt/noop/pbkdf2/scrypt/sha256
     // you can change default behaviour by providing a bean with the encoder you want
     // more: https://spring.io/blog/2017/11/01/spring-security-5-0-0-rc1-released#password-encoding
-    static final String CLIENT_SECRET = "{noop}my-secret";
+    static final String CLIENT_SECRET = "$2a$11$Ylugl5PH9dw30p25OEfRaOB6Emkd2GO8rq2hyQvkU83X6uWhlPy9O";//"{noop}my-secret";
 
     private static final String GRANT_TYPE_PASSWORD = "password";
     private static final String AUTHORIZATION_CODE = "authorization_code";
@@ -43,16 +44,34 @@ public class AuthServerOAuth2Config extends AuthorizationServerConfigurerAdapter
     @Autowired
     private AuthenticationManager authManager;
 
-
-
     @Autowired
     Environment env;
 
+    /*Data Source Configuration*/
+    @Value("classpath:schema.sql")
+    private Resource schemaScript;
+
+    @Value("classpath:data.sql")
+    private Resource dataScript;
+
+    @Autowired
+    private DataSource dataSource;
+
     @Bean
     public TokenStore tokenStore() {
-        return new JdbcTokenStore(dataSource());
+        return new JdbcTokenStore(dataSource);
     }
 
+    /*@Bean
+    public DataSource dataSource() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName(env.getProperty("jdbc.driverClassName"));
+        dataSource.setUrl(env.getProperty("jdbc.url"));
+        dataSource.setUsername(env.getProperty("jdbc.user"));
+        dataSource.setPassword(env.getProperty("jdbc.pass"));
+        return dataSource;
+    }*/
+/*
     @Bean
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
@@ -61,14 +80,7 @@ public class AuthServerOAuth2Config extends AuthorizationServerConfigurerAdapter
         dataSource.setUsername(env.getProperty("jdbc.user"));
         dataSource.setPassword(env.getProperty("jdbc.pass"));
         return dataSource;
-    }
-
-    /*Data Source Configuration*/
-    @Value("classpath:schema.sql")
-    private Resource schemaScript;
-
-    @Value("classpath:data.sql")
-    private Resource dataScript;
+    }*/
 
     private DatabasePopulator databasePopulator() {
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
@@ -87,16 +99,7 @@ public class AuthServerOAuth2Config extends AuthorizationServerConfigurerAdapter
 
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
-        /*clients
-                .inMemory()
-                .withClient(CLIENT_ID)
-                .secret(CLIENT_SECRET)
-                .authorizedGrantTypes(GRANT_TYPE_PASSWORD, AUTHORIZATION_CODE, REFRESH_TOKEN)
-                .scopes(SCOPE_READ, SCOPE_WRITE, TRUST)
-                .accessTokenValiditySeconds(VALID_FOREVER)
-                .refreshTokenValiditySeconds(VALID_FOREVER);*/
-
-        clients.jdbc(dataSource())
+        clients.jdbc(dataSource)
                 .withClient(CLIENT_ID)
                 .secret(CLIENT_SECRET)
                 .authorizedGrantTypes(GRANT_TYPE_PASSWORD, AUTHORIZATION_CODE, REFRESH_TOKEN)

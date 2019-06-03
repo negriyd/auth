@@ -12,3 +12,13 @@ INSERT INTO oauth_client_details
 (client_id, client_secret)
 VALUES
 ('resource-server', 'resource-server');*/
+
+INSERT INTO oauth_client_details
+(client_id, client_secret, scope, authorized_grant_types, access_token_validity, refresh_token_validity, additional_information)
+VALUES
+('my-client2', '$2a$11$Ylugl5PH9dw30p25OEfRaOB6Emkd2GO8rq2hyQvkU83X6uWhlPy9O', 'read,write,trust', 'password,authorization_code,refresh_token', -1, -1, '{}');
+
+INSERT INTO oauth_client_details
+(client_id, client_secret, scope, authorized_grant_types, access_token_validity, refresh_token_validity, additional_information)
+VALUES
+('my-client1', '$2a$11$Ylugl5PH9dw30p25OEfRaOB6Emkd2GO8rq2hyQvkU83X6uWhlPy9O', 'read,write,trust', 'password,authorization_code,refresh_token', -1, -1, '{}');
